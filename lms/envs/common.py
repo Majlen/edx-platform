@@ -406,6 +406,8 @@ FEATURES = {
 
     # Whether course goals is enabled.
     'ENABLE_COURSE_GOALS': True,
+
+    "CUSTOM_CERTIFICATE_TEMPLATES_ENABLED": True,
 }
 
 # Settings for the course reviews tool template and identification key, set either to None to disable course reviews
