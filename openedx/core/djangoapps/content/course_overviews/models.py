@@ -241,7 +241,7 @@ class CourseOverview(TimeStampedModel):
                     # CourseOverview.get_from_id is called while a
                     # another identical overview is already in the process
                     # of being created.
-                    # One of the overviews will be saved normally, while the
+                    # One of the overviews will be saved normall@aly, while the
                     # other one will cause an IntegrityError because it tries
                     # to save a duplicate.
                     # (see: https://openedx.atlassian.net/browse/TNL-2854).
