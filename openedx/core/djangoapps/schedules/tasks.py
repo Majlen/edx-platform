@@ -20,7 +20,6 @@ from edx_ace.recipient import Recipient
 from edx_ace.utils.date import deserialize
 from opaque_keys.edx.keys import CourseKey
 
-from course_modes.models import CourseMode
 from courseware.date_summary import verified_upgrade_deadline_link, verified_upgrade_link_is_valid
 
 from edxmako.shortcuts import marketing_link
@@ -33,6 +32,8 @@ from openedx.core.djangoapps.schedules.template_context import (
     get_base_template_context
 )
 
+
+from lms.djangoapps.experiments.utils import check_and_get_upgrade_link_and_date
 
 LOG = logging.getLogger(__name__)
 
@@ -137,7 +138,7 @@ def _recurring_nudge_schedules_for_hour(site, target_hour, org_list, exclude_org
         }
 
         # Information for including upsell messaging in template.
-        _add_upsell_information_to_template_context(user, first_schedule, template_context)
+        _add_upsell_button_information_to_template_context(user, first_schedule, template_context)
 
         yield (user, first_schedule.enrollment.course.language, template_context)
 
@@ -179,33 +180,6 @@ def _gather_users_and_schedules_for_target_hour(target_hour, org_list, exclude_o
     LOG.debug('Scheduled Nudge: Query = %r', schedules.query.sql_with_params())
 
     return users, schedules
-
-
-def _add_upsell_information_to_template_context(user, schedule, template_context):
-    enrollment = schedule.enrollment
-    course = enrollment.course
-
-    upgrade_link = None
-    if enrollment.dynamic_upgrade_deadline is None:
-        show_upsell = False
-    else:
-        upgrade_link_is_valid = verified_upgrade_link_is_valid(enrollment)
-        if upgrade_link_is_valid:
-            upgrade_link = verified_upgrade_deadline_link(user, course)
-
-        show_upsell = upgrade_link_is_valid and upgrade_link is not None
-
-    template_context['show_upsell'] = show_upsell
-    if show_upsell:
-        template_context['upsell_link'] = upgrade_link
-        template_context['user_schedule_upgrade_deadline_time'] = dateformat.format(
-            enrollment.dynamic_upgrade_deadline,
-            get_format(
-                'DATE_FORMAT',
-                lang=course.language,
-                use_l10n=True
-            )
-        )
 
 
 @task(ignore_result=True, routing_key=ROUTING_KEY)
@@ -263,7 +237,7 @@ def _recurring_nudge_schedules_for_bin(site, target_day, bin_num, org_list, excl
         })
 
         # Information for including upsell messaging in template.
-        _add_upsell_information_to_template_context(user, first_schedule, template_context)
+        _add_upsell_button_information_to_template_context(user, first_schedule, template_context)
 
         yield (user, first_schedule.enrollment.course.language, template_context)
 
@@ -344,7 +318,7 @@ def _upgrade_reminder_schedules_for_bin(site, target_day, bin_num, org_list, exc
             'cert_image': absolute_url(site, static('course_experience/images/verified-cert.png')),
         })
 
-        _add_upsell_information_to_template_context(user, first_schedule, template_context)
+        _add_upsell_button_information_to_template_context(user, first_schedule, template_context)
 
         yield (user, first_schedule.enrollment.course.language, template_context)
 
@@ -402,3 +376,35 @@ def get_schedules_with_target_date_by_bin_and_orgs(schedule_date_field, target_d
         schedules = schedules.using("read_replica")
 
     return schedules
+
+
+def _add_upsell_button_information_to_template_context(user, schedule, template_context):
+    enrollment = schedule.enrollment
+    course = enrollment.course
+
+    verified_upgrade_link = _get_link_to_purchase_verified_certificate(user, schedule)
+    has_verified_upgrade_link = verified_upgrade_link is not None
+    link, date = check_and_get_upgrade_link_and_date(user, schedule.enrollment)
+
+    if has_verified_upgrade_link:
+        template_context['upsell_link'] = verified_upgrade_link
+        template_context['user_schedule_upgrade_deadline_time'] = dateformat.format(
+            enrollment.dynamic_upgrade_deadline,
+            get_format(
+                'DATE_FORMAT',
+                lang=course.language,
+                use_l10n=True
+            )
+        )
+
+    template_context['show_upsell'] = has_verified_upgrade_link
+
+
+def _get_link_to_purchase_verified_certificate(a_user, a_schedule):
+    enrollment = a_schedule.enrollment
+    if enrollment.dynamic_upgrade_deadline is None or not verified_upgrade_link_is_valid(enrollment):
+        return None
+
+    return verified_upgrade_deadline_link(a_user, enrollment.course)
+
+
