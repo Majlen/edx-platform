@@ -33,8 +33,6 @@ from openedx.core.djangoapps.schedules.template_context import (
 )
 
 
-from lms.djangoapps.experiments.utils import check_and_get_upgrade_link_and_date
-
 LOG = logging.getLogger(__name__)
 
 
@@ -384,7 +382,6 @@ def _add_upsell_button_information_to_template_context(user, schedule, template_
 
     verified_upgrade_link = _get_link_to_purchase_verified_certificate(user, schedule)
     has_verified_upgrade_link = verified_upgrade_link is not None
-    link, date = check_and_get_upgrade_link_and_date(user, schedule.enrollment)
 
     if has_verified_upgrade_link:
         template_context['upsell_link'] = verified_upgrade_link
