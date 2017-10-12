@@ -1721,15 +1721,15 @@ class CourseEnrollment(models.Model):
 
     @cached_property
     def dynamic_upgrade_deadline(self):
+        if not DynamicUpgradeDeadlineConfiguration.is_enabled():
+            return None
+
         try:
             course_overview = self.course
         except CourseOverview.DoesNotExist:
             course_overview = self.course_overview
 
         if not course_overview.self_paced:
-            return None
-
-        if not DynamicUpgradeDeadlineConfiguration.is_enabled():
             return None
 
         course_config = CourseDynamicUpgradeDeadlineConfiguration.current(self.course_id)
