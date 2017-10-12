@@ -5,6 +5,7 @@ from django.utils.translation import ugettext as _
 
 from openedx.core.djangoapps.util.user_messages import UserMessageCollection
 from openedx.core.djangoapps.waffle_utils import CourseWaffleFlag, WaffleFlagNamespace
+from request_cache import get_cache as get_request_cache
 
 
 # Namespace for course experience waffle flags.
@@ -77,6 +78,13 @@ def course_home_url_name(course_key):
         return 'openedx.course_experience.course_home'
     else:
         return 'info'
+
+
+def get_course_experience_request_cache():
+    """
+    Get the request cache namespaced for course experience.
+    """
+    return get_request_cache('course_experience')
 
 
 class CourseHomeMessages(UserMessageCollection):

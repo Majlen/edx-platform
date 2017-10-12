@@ -5,11 +5,15 @@ from opaque_keys.edx.keys import CourseKey
 
 from lms.djangoapps.course_api.blocks.api import get_blocks
 from lms.djangoapps.course_blocks.utils import get_student_module_as_dict
-from openedx.core.lib.cache_utils import memoized
 from xmodule.modulestore.django import modulestore
 
+from . import get_course_experience_request_cache
 
-@memoized
+
+ROOT_BLOCK_CACHE_KEY = 'course_experience.course_outline_root_block'
+UNSET = object()
+
+
 def get_course_outline_block_tree(request, course_id):
     """
     Returns the root block of the course outline, with children as blocks.
@@ -59,21 +63,26 @@ def get_course_outline_block_tree(request, course_id):
                 # the child block is no longer accessible we'll use the last child.
                 block['children'][-1]['last_accessed'] = True
 
-    course_key = CourseKey.from_string(course_id)
-    course_usage_key = modulestore().make_course_usage_key(course_key)
+    course_outline_root_block = get_course_experience_request_cache().get(ROOT_BLOCK_CACHE_KEY, UNSET)
+    if course_outline_root_block == UNSET:
+        course_key = CourseKey.from_string(course_id)
+        course_usage_key = modulestore().make_course_usage_key(course_key)
 
-    all_blocks = get_blocks(
-        request,
-        course_usage_key,
-        user=request.user,
-        nav_depth=3,
-        requested_fields=['children', 'display_name', 'type', 'due', 'graded', 'special_exam_info', 'format'],
-        block_types_filter=['course', 'chapter', 'sequential']
-    )
+        all_blocks = get_blocks(
+            request,
+            course_usage_key,
+            user=request.user,
+            nav_depth=3,
+            requested_fields=['children', 'display_name', 'type', 'due', 'graded', 'special_exam_info', 'format'],
+            block_types_filter=['course', 'chapter', 'sequential']
+        )
 
-    course_outline_root_block = all_blocks['blocks'].get(all_blocks['root'], None)
-    if course_outline_root_block:
-        populate_children(course_outline_root_block, all_blocks['blocks'])
-        set_last_accessed_default(course_outline_root_block)
-        mark_last_accessed(request.user, course_key, course_outline_root_block)
+        course_outline_root_block = all_blocks['blocks'].get(all_blocks['root'], None)
+        if course_outline_root_block:
+            populate_children(course_outline_root_block, all_blocks['blocks'])
+            set_last_accessed_default(course_outline_root_block)
+            mark_last_accessed(request.user, course_key, course_outline_root_block)
+
+        get_course_experience_request_cache()[ROOT_BLOCK_CACHE_KEY] = course_outline_root_block
+
     return course_outline_root_block
