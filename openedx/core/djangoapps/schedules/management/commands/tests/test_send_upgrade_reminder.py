@@ -103,7 +103,7 @@ class TestUpgradeReminder(FilteredQueryCountMixin, CacheIsolationTestCase):
         test_time = datetime.datetime(2017, 8, 3, 18, tzinfo=pytz.UTC)
         test_time_str = serialize(test_time)
         for b in range(tasks.UPGRADE_REMINDER_NUM_BINS):
-            expected_queries = 2
+            expected_queries = NUM_QUERIES_NO_MATCHING_SCHEDULES
             if b in bins_in_use:
                 # to fetch course modes for valid schedules
                 expected_queries += NUM_COURSE_MODES_QUERIES
