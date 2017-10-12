@@ -37,6 +37,8 @@ NUM_QUERIES_WITH_MATCHES = NUM_QUERIES_NO_MATCHING_SCHEDULES + 1
 # 2) E-commerce configuration
 NUM_QUERIES_WITH_DEADLINE = 2
 
+NUM_COURSE_MODES_QUERIES = 1
+
 
 @ddt.ddt
 @skip_unless_lms
@@ -92,7 +94,6 @@ class TestUpgradeReminder(FilteredQueryCountMixin, CacheIsolationTestCase):
         schedules = [
             ScheduleFactory.create(
                 upgrade_deadline=datetime.datetime(2017, 8, 3, 18, 44, 30, tzinfo=pytz.UTC),
-                enrollment__user=UserFactory.create(id=(i + 100)),
                 enrollment__course__id=CourseLocator('edX', 'toy', 'Bin')
             ) for i in range(schedule_count)
         ]
@@ -105,7 +106,7 @@ class TestUpgradeReminder(FilteredQueryCountMixin, CacheIsolationTestCase):
             expected_queries = 2
             if b in bins_in_use:
                 # to fetch course modes for valid schedules
-                expected_queries += 1
+                expected_queries += NUM_COURSE_MODES_QUERIES
 
             with self.assertNumQueries(expected_queries, table_blacklist=WAFFLE_TABLES):
                 tasks.upgrade_reminder_schedule_bin(

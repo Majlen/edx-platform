@@ -34,6 +34,8 @@ NUM_QUERIES_NO_MATCHING_SCHEDULES = 2
 # 3) Query all course modes for all courses in returned schedules
 NUM_QUERIES_WITH_MATCHES = NUM_QUERIES_NO_MATCHING_SCHEDULES + 1
 
+NUM_COURSE_MODES_QUERIES = 1
+
 
 @ddt.ddt
 @skip_unless_lms
@@ -90,7 +92,6 @@ class TestSendRecurringNudge(FilteredQueryCountMixin, CacheIsolationTestCase):
         schedules = [
             ScheduleFactory.create(
                 start=datetime.datetime(2017, 8, 3, 18, 44, 30, tzinfo=pytz.UTC),
-                enrollment__user=UserFactory.create(id=(i + 100)),
                 enrollment__course__id=CourseLocator('edX', 'toy', 'Bin')
             ) for i in range(schedule_count)
         ]
@@ -103,7 +104,7 @@ class TestSendRecurringNudge(FilteredQueryCountMixin, CacheIsolationTestCase):
             expected_queries = NUM_QUERIES_NO_MATCHING_SCHEDULES
             if b in bins_in_use:
                 # to fetch course modes for valid schedules
-                expected_queries += 1
+                expected_queries += NUM_COURSE_MODES_QUERIES
 
             with self.assertNumQueries(expected_queries, table_blacklist=WAFFLE_TABLES):
                 tasks.recurring_nudge_schedule_bin(
