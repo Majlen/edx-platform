@@ -427,9 +427,7 @@ def _render_certificate_template(request, context, course, user_certificate):
     """
     Picks appropriate certificate templates and renders it.
     """
-    log.info('CUSTOM_CERTIFICATE_TEMPLATES_ENABLED: '+str(settings.FEATURES.get('CUSTOM_CERTIFICATE_TEMPLATES_ENABLED', False)))
     if settings.FEATURES.get('CUSTOM_CERTIFICATE_TEMPLATES_ENABLED', False):
-        log.info('content_language is '+ str(context.get('content_language')))
         custom_template = get_certificate_template(course.id, user_certificate.mode, context.get('content_language'))
         if custom_template:
             template = Template(
@@ -484,8 +482,6 @@ def _update_organization_context(context, course):
     partner_long_name, organization_logo = None, None
     partner_short_name = course.display_organization if course.display_organization else course.org
     organizations = organization_api.get_course_organizations(course_id=course.id)
-    log.info("UPDATE ORGANIZATION CONTEXT GOT ORGANIZATIONs V")
-    log.info(organizations)
     if organizations:
         #TODO Need to add support for multiple organizations, Currently we are interested in the first one.
         organization = organizations[0]
