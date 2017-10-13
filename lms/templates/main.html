@@ -132,6 +132,24 @@ from pipeline_mako import render_require_js_path_overrides
     </script>
 % endif
 
+<% piw_url = static.get_value("PIWIK_ANALYTICS_SERVER", settings.PIWIK_ANALYTICS_SERVER) %>
+<% piw_siteid = static.get_value("PIWIK_ANALYTICS_SITE_ID", settings.PIWIK_ANALYTICS_SITE_ID) %>
+% if piw_acct:
+    <script type="text/javascript">
+    var _paq = _paq || [];
+    _paq.push(['trackPageView']);
+    _paq.push(['enableLinkTracking']);
+
+    (function() {
+	    var u="//" + '${piw_url}' + "/";
+      _paq.push(['setTrackerUrl', u+'piwik.php']);
+      _paq.push(['setSiteId', '${piw_siteid}']);
+      var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
+      g.type='text/javascript'; g.async=true; g.defer=true; g.src=u+'piwik.js'; s.parentNode.insertBefore(g,s);
+    })();
+    </script>
+% endif
+
 </head>
 
 <body class="${static.dir_rtl()} <%block name='bodyclass'/> lang_${LANGUAGE_CODE}">

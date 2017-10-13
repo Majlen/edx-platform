@@ -762,6 +762,10 @@ TRACKING_SEGMENTIO_SOURCE_MAP = {
 GOOGLE_ANALYTICS_ACCOUNT = None
 GOOGLE_ANALYTICS_LINKEDIN = 'GOOGLE_ANALYTICS_LINKEDIN_DUMMY'
 
+######################## PIWIK ###########################
+PIWIK_ANALYTICS_SERVER = None
+PIWIK_ANALYTICS_SITE_ID = None
+
 ######################## OPTIMIZELY ###########################
 OPTIMIZELY_PROJECT_ID = None
 
